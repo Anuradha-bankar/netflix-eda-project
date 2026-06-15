@@ -1,5 +1,5 @@
 # netflix-eda-project
-# Netflix Data Analysis (EDA Project)
+# Exploratory Data Analysis (EDA)
 
 ## Description
 This project performs Exploratory Data Analysis (EDA) on Netflix dataset to find insights.
