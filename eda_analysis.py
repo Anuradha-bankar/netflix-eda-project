@@ -24,12 +24,22 @@ df['date_added'] = pd.to_datetime(df['date_added'], errors='coerce')
 # Year column create
 df['year_added'] = df['date_added'].dt.year
 
-#movies vs tv shows
+# 1) movies vs tv shows
 import matplotlib.pyplot as plt
 import seaborn as sns
+sns.set_style("whitegrid")
 
-sns.countplot(x='type', data=df)
-plt.title("Movies vs TV Shows")
+type_counts = df['type'].value_counts()
+
+plt.figure()
+plt.pie(type_counts, labels=type_counts.index, autopct='%1.1f%%', startangle=90)
+
+# donut hole
+centre_circle = plt.Circle((0,0),0.70,fc='white')
+fig = plt.gcf()
+fig.gca().add_artist(centre_circle)
+
+plt.title("Distribution of Movies vs TV Shows", fontsize=14)
 plt.show()
 
 #hypotheses 1:
@@ -46,13 +56,17 @@ if movies > tv:
 else:
     print("Hypothesis False")
 
-#content added per year
+# 2) content added per year
 year_data = df['year_added'].value_counts().sort_index()
 
-year_data.plot(kind='line')
-plt.title("Content Added Over Years")
+plt.figure()
+plt.plot(year_data.index, year_data.values, marker='o', linestyle='-')
+
+plt.title("Trend of Content Added Over Years", fontsize=14)
 plt.xlabel("Year")
-plt.ylabel("Count")
+plt.ylabel("Number of Shows")
+plt.grid(True)
+
 plt.show()
 
 #hypotheses 2:
@@ -63,17 +77,42 @@ year_counts = df['year_added'].value_counts().sort_index()
 
 print(year_counts)
 
-#top countries
-country_data = df['country'].value_counts().head(10)
+# 3) top countries
+import plotly.express as px
 
-country_data.plot(kind='bar')
-plt.title("Top 10 Countries")
-plt.xticks(rotation=45)
-plt.show()
+# country data clean karo (multiple countries split karne ke liye)
+country_df = df['country'].str.split(',', expand=True).stack().reset_index(level=1, drop=True)
+country_df = country_df.str.strip()
 
-#Rating distribution
-sns.countplot(y='rating', data=df, order=df['rating'].value_counts().index)
-plt.title("Ratings Distribution")
+# count
+country_counts = country_df.value_counts().reset_index()
+country_counts.columns = ['country', 'count']
+
+# map plot
+fig = px.choropleth(
+    country_counts,
+    locations="country",
+    locationmode="country names",
+    color="count",
+    title="Netflix Content by Country",
+)
+
+fig.show()
+
+# 4) Rating distribution
+plt.figure()
+
+sns.countplot(
+    y='rating',
+    data=df,
+    order=df['rating'].value_counts().index,
+    palette='coolwarm'   #color add
+)
+
+plt.title("Content Rating Distribution", fontsize=14)
+plt.xlabel("Count")
+plt.ylabel("Rating")
+
 plt.show()
 
 #hypotheses 3:
@@ -81,24 +120,42 @@ plt.show()
 top_rating = df['rating'].value_counts().idxmax()
 print("Most common rating:", top_rating)
 
-#top geners
+# 5) top geners
 genre_data = df['listed_in'].str.split(',', expand=True).stack()
 
 top_genres = genre_data.value_counts().head(10)
+plt.figure()
+top_genres.plot(
+    kind='bar',
+    color=plt.cm.viridis(range(len(top_genres)))  #gradient colors
+)
 
-top_genres.plot(kind='bar')
-plt.title("Top Genres")
+plt.title("Top 10 Genres on Netflix", fontsize=14)
+plt.xlabel("Genre")
+plt.ylabel("Count")
 plt.xticks(rotation=45)
+
 plt.show()
 
-#movie duration
+# 6) movie duration
 movies = df[df['type'] == 'Movie'].copy()
 
 movies['duration'] = movies['duration'].str.replace(' min', '')
 movies['duration'] = pd.to_numeric(movies['duration'], errors='coerce')
 
-sns.histplot(movies['duration'], bins=20)
-plt.title("Movie Duration Distribution")
+plt.figure()
+
+sns.histplot(
+    movies['duration'],
+    bins=20,
+    kde=True,
+    color='purple'   #color change
+)
+
+plt.title("Distribution of Movie Durations", fontsize=14)
+plt.xlabel("Duration (minutes)")
+plt.ylabel("Frequency")
+
 plt.show()
 
 #hypotheses 4:
